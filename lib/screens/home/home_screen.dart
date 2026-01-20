@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/suggestions_provider.dart';
+import '../../providers/home_provider.dart';
 import 'map_view.dart';
 
 /// Provider to control lazy loading of the map
 final mapReadyProvider = StateProvider<bool>((ref) => false);
-
-/// Provider for bottom navigation index
-final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -43,6 +42,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         elevation: 0,
         backgroundColor: theme.colorScheme.background,
         foregroundColor: theme.colorScheme.primary,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: Icon(
+                Icons.notifications,
+                color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+              ),
+              onPressed: () {
+                context.go('/notifications');
+              },
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -136,7 +149,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         currentIndex: selectedIndex,
         onTap: (index) {
           ref.read(bottomNavIndexProvider.notifier).state = index;
-          // TODO: Implement navigation for BookMark and Settings
+          if (index == 1) {
+            // Navigate to Bookmarks
+            context.go('/bookmarks');
+          } else if (index == 2) {
+            // Navigate to Settings
+            context.go('/settings');
+          }
+          // Home (index 0) stays on this screen
         },
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

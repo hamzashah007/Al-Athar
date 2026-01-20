@@ -14,6 +14,7 @@ class _MapViewState extends State<MapView> with AutomaticKeepAliveClientMixin {
   GoogleMapController? _controller;
   bool _mapReady = false;
   bool _locationPermissionGranted = false;
+  String? _mapError; // Track map loading errors
 
   static const CameraPosition _initialPosition = CameraPosition(
     target: LatLng(21.3891, 39.8579), // Centered on Makkah
@@ -40,7 +41,6 @@ class _MapViewState extends State<MapView> with AutomaticKeepAliveClientMixin {
 
   Future<void> _setMapStyle(bool isDark) async {
     if (_controller == null) return;
-
     try {
       final String style = await rootBundle.loadString(
         isDark
@@ -50,6 +50,7 @@ class _MapViewState extends State<MapView> with AutomaticKeepAliveClientMixin {
       await _controller!.setMapStyle(style);
     } catch (e) {
       debugPrint('Error loading map style: $e');
+      if (mounted) setState(() => _mapError = 'Map style failed to load.');
     }
   }
 
@@ -78,29 +79,49 @@ class _MapViewState extends State<MapView> with AutomaticKeepAliveClientMixin {
       borderRadius: BorderRadius.circular(16),
       child: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: _initialPosition,
-            myLocationEnabled: _locationPermissionGranted,
-            myLocationButtonEnabled: false, // We'll use custom button
-            zoomControlsEnabled: false,
-            liteModeEnabled: false,
-            buildingsEnabled: false,
-            onMapCreated: (controller) {
-              _controller = controller;
-              _setMapStyle(isDark);
-              if (mounted) {
-                setState(() => _mapReady = true);
-              }
-            },
-          ),
+          if (_mapError != null)
+            Container(
+              color: Theme.of(context).colorScheme.surface,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 8),
+                    Text(_mapError!, style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            )
+          else
+            GoogleMap(
+              initialCameraPosition: _initialPosition,
+              myLocationEnabled: _locationPermissionGranted,
+              myLocationButtonEnabled: false, // We'll use custom button
+              zoomControlsEnabled: false,
+              liteModeEnabled: false,
+              buildingsEnabled: false,
+              onMapCreated: (controller) {
+                try {
+                  _controller = controller;
+                  _setMapStyle(isDark);
+                  if (mounted) {
+                    setState(() => _mapReady = true);
+                  }
+                } catch (e) {
+                  debugPrint('Map init error: $e');
+                  if (mounted) setState(() => _mapError = 'Map failed to load.');
+                }
+              },
+            ),
           // Loading overlay
-          if (!_mapReady)
+          if (!_mapReady && _mapError == null)
             Container(
               color: Theme.of(context).colorScheme.surface,
               child: const Center(child: CircularProgressIndicator()),
             ),
           // Custom location button
-          if (_mapReady && _locationPermissionGranted)
+          if (_mapReady && _locationPermissionGranted && _mapError == null)
             Positioned(
               right: 16,
               bottom: 16,

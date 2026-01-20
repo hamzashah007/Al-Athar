@@ -1,32 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/settings_provider.dart';
 import 'routes.dart';
 import 'theme.dart';
 
-class AlAtharApp extends StatefulWidget {
+final _router = createAppRouter();
+
+class AlAtharApp extends ConsumerWidget {
   const AlAtharApp({Key? key}) : super(key: key);
 
   @override
-  State<AlAtharApp> createState() => _AlAtharAppState();
-}
-
-class _AlAtharAppState extends State<AlAtharApp> {
-  // Create router in state so it's recreated on hot restart
-  late final GoRouter _router;
-
-  @override
-  void initState() {
-    super.initState();
-    _router = createAppRouter();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(settingsProvider.select((s) => s.isDarkMode));
     return MaterialApp.router(
       title: 'Al-Athar',
       theme: appTheme,
       darkTheme: darkAppTheme,
-      themeMode: ThemeMode.system,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );

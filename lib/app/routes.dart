@@ -6,6 +6,7 @@ import '../screens/home/home_screen.dart';
 import '../screens/bookmarks/bookmarks_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
 
 // Create a new router instance each time the app starts
 GoRouter createAppRouter() {
@@ -33,6 +34,10 @@ GoRouter createAppRouter() {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
   );
