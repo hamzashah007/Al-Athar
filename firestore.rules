@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can only read/write their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Places collection - authenticated users can read, only admins can write
+    match /places/{placeId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admin SDK can write
+    }
+    
+    // Bookmarks - users can only access their own bookmarks
+    match /users/{userId}/bookmarks/{bookmarkId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Suggestions - authenticated users can create, only read their own
+    match /suggestions/{suggestionId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+  }
+}

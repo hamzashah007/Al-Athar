@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "929776247358",
+    "project_id": "al-athar-hexait",
+    "storage_bucket": "al-athar-hexait.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929776247358:android:77d4a3fec4832c80cbe76f",
+        "android_client_info": {
+          "package_name": "com.hexait.al_athar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDj0STrrW-hic-Hthax5ZKdMMB7VmqGxgY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
