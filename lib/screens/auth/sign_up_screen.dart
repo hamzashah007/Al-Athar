@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../widgets/custom_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_form_provider.dart';
@@ -49,7 +50,6 @@ class SignUpScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
     final nameController = ref.watch(_nameControllerProvider);
     final emailController = ref.watch(_emailControllerProvider);
@@ -308,34 +308,11 @@ class SignUpScreen extends ConsumerWidget {
                       ),
                     ),
                   const SizedBox(height: 28),
-                  ElevatedButton(
+                  CustomButton.elevated(
+                    text: 'Sign Up',
                     onPressed: loading ? null : validateAndSubmit,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: colorScheme.primary,
-                      disabledBackgroundColor: colorScheme.primary.withOpacity(
-                        0.7,
-                      ),
-                    ),
-                    child: loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'Sign Up',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: isDark ? Colors.black : Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    isLoading: loading,
+                    width: double.infinity,
                   ),
                   const SizedBox(height: 18),
                   Row(

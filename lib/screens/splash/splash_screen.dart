@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -29,10 +30,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _controller.forward();
 
     // Navigate quickly after animation completes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 1200), () {
-        if (mounted) _navigateBasedOnAuthState();
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 1200));
+      if (mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        final guestMode = prefs.getBool('guestMode') ?? false;
+        if (guestMode) {
+          debugPrint('SplashScreen: Guest mode active, navigating to /home');
+          context.go('/home');
+        } else {
+          _navigateBasedOnAuthState();
+        }
+      }
     });
   }
 

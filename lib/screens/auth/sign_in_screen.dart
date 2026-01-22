@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../widgets/custom_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_form_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/validators.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final loadingProvider = StateProvider<bool>((ref) => false);
 final errorProvider = StateProvider<String?>((ref) => null);
@@ -33,7 +35,6 @@ class SignInScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
     final emailController = ref.watch(emailControllerProvider);
     final passwordController = ref.watch(passwordControllerProvider);
@@ -181,57 +182,24 @@ class SignInScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  ElevatedButton(
+                  CustomButton.elevated(
+                    text: 'Sign In',
                     onPressed: loading ? null : validateAndSubmit,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: colorScheme.primary,
-                      disabledBackgroundColor: colorScheme.primary.withOpacity(
-                        0.7,
-                      ),
-                    ),
-                    child: loading
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: isDark ? Colors.black : Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'Sign In',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: isDark ? Colors.black : Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    isLoading: loading,
+                    width: double.infinity,
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton(
+                  CustomButton.outlined(
+                    text: 'Continue as Guest Mode',
                     onPressed: loading
                         ? null
-                        : () {
+                        : () async {
                             debugPrint('SignIn: Guest Mode button pressed');
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('guestMode', true);
                             context.go('/home');
                           },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: colorScheme.primary, width: 2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Continue as Guest Mode',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    width: double.infinity,
                   ),
                   const SizedBox(height: 18),
                   Row(
