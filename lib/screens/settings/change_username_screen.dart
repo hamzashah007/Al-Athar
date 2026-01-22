@@ -111,9 +111,26 @@ class _ChangeUsernameScreenState extends ConsumerState<ChangeUsernameScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = ref.watch(firebaseAuthProvider).currentUser;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Change Username'), elevation: 0),
+      appBar: AppBar(
+        title: Text(
+          'Manage Account',
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+        ),
+        backgroundColor: theme.colorScheme.background,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(

@@ -129,12 +129,29 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final oldPasswordVisible = ref.watch(_oldPasswordVisibleProvider);
     final newPasswordVisible = ref.watch(_newPasswordVisibleProvider);
     final confirmPasswordVisible = ref.watch(_confirmPasswordVisibleProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Change Password'), elevation: 0),
+      appBar: AppBar(
+        title: Text(
+          'Manage Account',
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+        ),
+        backgroundColor: theme.colorScheme.background,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
