@@ -2,21 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/home_provider.dart';
+import '../../providers/bookmarks_provider.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
-
-final bookmarksProvider = FutureProvider<List<String>>((ref) async {
-  await Future.delayed(const Duration(seconds: 1));
-  // TODO: Replace with real Firestore bookmarks
-  return [];
-});
 
 class BookmarksScreen extends ConsumerWidget {
   const BookmarksScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bookmarksAsync = ref.watch(bookmarksProvider);
+    final bookmarksAsync = ref.watch(bookmarkedPlacesProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -57,10 +52,10 @@ class BookmarksScreen extends ConsumerWidget {
       ),
       body: bookmarksAsync.when(
         loading: () =>
-            const CustomLoadingWidget(message: 'Loading bookmarks...'),
+            const CustomLoadingWidget(message: 'Loading your bookmarks...'),
         error: (e, _) => CustomErrorWidget(
-          message: 'Failed to load bookmarks',
-          onRetry: () => ref.refresh(bookmarksProvider),
+          message: 'Couldn\'t load your bookmarks. Please check your internet connection.',
+          onRetry: () => ref.invalidate(bookmarkedPlacesProvider),
         ),
         data: (bookmarks) => bookmarks.isEmpty
             ? Center(
@@ -80,10 +75,33 @@ class BookmarksScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(24),
                 itemCount: bookmarks.length,
                 separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, i) => ListTile(
-                  leading: const Icon(Icons.bookmark),
-                  title: Text(bookmarks[i]),
-                ),
+                itemBuilder: (context, i) {
+                  final place = bookmarks[i];
+                  return ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        place.imageUrl,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 50,
+                          height: 50,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.place, size: 24),
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      place.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(place.city),
+                    trailing: const Icon(Icons.bookmark),
+                    onTap: () => context.push('/place-details/${place.id}'),
+                  );
+                },
               ),
       ),
     );

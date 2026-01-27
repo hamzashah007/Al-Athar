@@ -10,6 +10,7 @@ import '../screens/settings/settings_screen.dart';
 import '../screens/settings/change_password_screen.dart';
 import '../screens/settings/change_username_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
+import '../screens/home/place_details_screen.dart';
 
 // Helper for no transition
 CustomTransitionPage<T> noTransitionPage<T>({required Widget child}) =>
@@ -73,6 +74,15 @@ GoRouter createAppRouter() {
         path: '/change-username',
         pageBuilder: (context, state) =>
             noTransitionPage(child: const ChangeUsernameScreen()),
+      ),
+      GoRoute(
+        path: '/place-details/:id',
+        pageBuilder: (context, state) {
+          final placeId = state.pathParameters['id']!;
+          return noTransitionPage(
+            child: PlaceDetailsScreen(placeId: placeId),
+          );
+        },
       ),
     ],
   );

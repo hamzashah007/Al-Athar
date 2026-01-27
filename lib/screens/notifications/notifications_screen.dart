@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
+import '../../widgets/empty_state_widget.dart';
 
 final notificationsProvider = FutureProvider<List<Map<String, String>>>((
   ref,
@@ -79,26 +80,14 @@ class NotificationsScreen extends ConsumerWidget {
                 message: 'Loading notifications...',
               ),
               error: (e, _) => CustomErrorWidget(
-                message: 'Failed to load notifications',
+                message: 'Couldn\'t load notifications. Please check your connection.',
                 onRetry: () => ref.refresh(notificationsProvider),
               ),
               data: (notifications) => notifications.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.notifications_off,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No notifications yet',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ],
-                      ),
+                  ? EmptyStateWidget(
+                      icon: Icons.notifications_none,
+                      title: 'No Notifications Yet',
+                      message: 'You\'ll receive notifications when you\'re near historical places.',
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),

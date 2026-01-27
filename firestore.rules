@@ -10,7 +10,7 @@ service cloud.firestore {
     // Places collection - authenticated users can read, only admins can write
     match /places/{placeId} {
       allow read: if request.auth != null;
-      allow write: if false; // Only admin SDK can write
+      allow write: if true; // TEMPORARY: Allow writes to add initial data
     }
     
     // Bookmarks - users can only access their own bookmarks

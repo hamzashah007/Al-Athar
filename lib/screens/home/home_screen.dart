@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../providers/suggestions_provider.dart';
 import '../../providers/home_provider.dart';
+import '../../providers/places_provider.dart';
+import '../../providers/geofence_provider.dart';
+import '../../widgets/permission_denied_dialog.dart';
 import 'map_view.dart';
 
 /// Provider to control lazy loading of the map
@@ -16,11 +20,38 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _permissionDialogShown = false;
+
   @override
   void initState() {
     super.initState();
-    // Delay map loading slightly to let home screen UI render first
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    
+    // Initialize geofencing after UI is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Check location permission first
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final permission = await Geolocator.checkPermission();
+      
+      // Show dialog if location is denied
+      if (!serviceEnabled && mounted && !_permissionDialogShown) {
+        _permissionDialogShown = true;
+        await PermissionDeniedDialog.showLocationServicesDisabled(context);
+      } else if (permission == LocationPermission.denied && mounted && !_permissionDialogShown) {
+        _permissionDialogShown = true;
+        await PermissionDeniedDialog.showLocationDenied(context);
+      }
+      
+      // Initialize geofence manager with navigation callback
+      final geofenceManager = ref.read(geofenceManagerProvider);
+      geofenceManager.initialize(
+        onNotificationTapped: (placeId) {
+          if (mounted) {
+            context.push('/place-details/$placeId');
+          }
+        },
+      );
+      
+      // Delay map loading slightly to let home screen UI render first
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           ref.read(mapReadyProvider.notifier).state = true;
@@ -35,6 +66,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final suggestions = ref.watch(suggestionsProvider);
     final mapReady = ref.watch(mapReadyProvider);
     final selectedIndex = ref.watch(bottomNavIndexProvider);
+    final selectedCity = ref.watch(selectedCityProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,6 +96,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: TextField(
+                onChanged: (value) {
+                  ref.read(searchQueryProvider.notifier).state = value;
+                },
                 decoration: InputDecoration(
                   hintText: 'Search historical places...',
                   prefixIcon: Icon(
@@ -101,16 +136,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 separatorBuilder: (_, __) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
                   final suggestion = suggestions[index];
+                  final isSelected = selectedCity == suggestion.name;
                   return Card(
+                    color: isSelected
+                        ? theme.colorScheme.primary.withOpacity(0.2)
+                        : null,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
+                      side: isSelected
+                          ? BorderSide(
+                              color: theme.colorScheme.primary,
+                              width: 2,
+                            )
+                          : BorderSide.none,
                     ),
                     elevation: 2,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(16),
                       onTap: () {
-                        // TODO: Implement suggestion tap - filter places by city
-                        debugPrint('Tapped on: ${suggestion.name}');
+                        if (isSelected) {
+                          // Deselect if already selected
+                          ref.read(selectedCityProvider.notifier).state = null;
+                        } else {
+                          // Select the city
+                          ref.read(selectedCityProvider.notifier).state = suggestion.name;
+                        }
                       },
                       child: Container(
                         width: 100,
@@ -120,6 +170,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           suggestion.name,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : null,
                           ),
                         ),
                       ),
