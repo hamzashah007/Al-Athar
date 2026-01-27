@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart';
 import '../../services/location_service.dart';
 import '../../providers/places_provider.dart';
+import '../../providers/home_provider.dart';
 import '../../models/place_model.dart';
 import 'place_bottom_sheet.dart';
 
@@ -110,6 +111,20 @@ class _MapViewState extends ConsumerState<MapView>
     final mapReady = ref.watch(mapReadyProvider);
     final locationGranted = ref.watch(locationPermissionProvider);
     final placesAsync = ref.watch(filteredPlacesProvider);
+
+    // Listen for map camera target changes (when city chip is tapped)
+    ref.listen<CameraPosition?>(mapCameraTargetProvider, (previous, next) {
+      if (next != null && mounted) {
+        final controller = ref.read(mapControllerProvider);
+        controller?.animateCamera(CameraUpdate.newCameraPosition(next));
+        // Reset the target after animation starts
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            ref.read(mapCameraTargetProvider.notifier).state = null;
+          }
+        });
+      }
+    });
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../providers/suggestions_provider.dart';
 import '../../providers/home_provider.dart';
 import '../../providers/places_provider.dart';
@@ -160,6 +161,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         } else {
                           // Select the city
                           ref.read(selectedCityProvider.notifier).state = suggestion.name;
+                          // Move map to city location
+                          if (suggestion.latitude != null && suggestion.longitude != null) {
+                            final cameraPosition = CameraPosition(
+                              target: LatLng(suggestion.latitude!, suggestion.longitude!),
+                              zoom: suggestion.zoom ?? 12.0,
+                            );
+                            ref.read(mapCameraTargetProvider.notifier).state = cameraPosition;
+                          }
                         }
                       },
                       child: Container(
