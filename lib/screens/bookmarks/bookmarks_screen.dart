@@ -80,8 +80,8 @@ class BookmarksScreen extends ConsumerWidget {
                   return ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        place.imageUrl,
+                      child: Image.asset(
+                        'assets/places/${place.image}',
                         width: 50,
                         height: 50,
                         fit: BoxFit.cover,

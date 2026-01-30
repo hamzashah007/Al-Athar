@@ -29,6 +29,8 @@ class _MapViewState extends ConsumerState<MapView>
     zoom: 6.5,
   );
 
+  GoogleMapController? _controller;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -36,6 +38,11 @@ class _MapViewState extends ConsumerState<MapView>
   void initState() {
     super.initState();
     _requestLocationPermission();
+    // Save the controller instance early for dispose
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final container = ProviderScope.containerOf(context, listen: false);
+      _controller = container.read(mapControllerProvider);
+    });
   }
 
   Future<void> _requestLocationPermission() async {
@@ -60,9 +67,23 @@ class _MapViewState extends ConsumerState<MapView>
   }
 
   void _onMarkerTapped(PlaceModel place) {
+    // Move map to center the place
+    final controller = ref.read(mapControllerProvider);
+    if (controller != null) {
+      controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(place.latitude, place.longitude),
+            zoom: 16.0, // Closer zoom for detailed view
+          ),
+        ),
+      );
+    }
+    
+    // Show bottom sheet with place details
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
+      isScrollControlled: false,
       backgroundColor: Colors.transparent,
       builder: (context) => PlaceBottomSheet(place: place),
     );
@@ -258,7 +279,7 @@ class _MapViewState extends ConsumerState<MapView>
 
   @override
   void dispose() {
-    ref.read(mapControllerProvider)?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 }

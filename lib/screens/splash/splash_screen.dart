@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/location_permission_handler.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -29,8 +30,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _controller.forward();
 
-    // Navigate quickly after animation completes
+    // Request location permission on splash
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await LocationPermissionHandler.requestLocationPermission(context);
       await Future.delayed(const Duration(milliseconds: 1200));
       if (mounted) {
         final prefs = await SharedPreferences.getInstance();

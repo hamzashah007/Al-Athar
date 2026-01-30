@@ -72,6 +72,7 @@ class GeofenceManager {
 
   /// Start geofence monitoring
   Future<void> startGeofencing() async {
+    debugPrint('GeofenceManager: startGeofencing called');
     try {
       final geofenceService = ref.read(geofenceServiceProvider);
       await geofenceService.startMonitoring();

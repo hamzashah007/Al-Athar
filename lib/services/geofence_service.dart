@@ -12,11 +12,11 @@ class GeofenceService {
   // Debounce cache: tracks last notification time per place
   final Map<String, DateTime> _notificationCache = {};
   
-  // Geofence radius in meters
-  static const double radiusMeters = 100.0;
+  // Geofence radius in meters (500m for testing, change back to 100 for production)
+  static const double radiusMeters = 500.0;
   
   // Minimum time between notifications for same place (in minutes)
-  static const int cooldownMinutes = 30;
+  static const int cooldownMinutes = 5;
   
   StreamSubscription<Position>? _locationSubscription;
   List<PlaceModel> _currentPlaces = [];
@@ -29,6 +29,7 @@ class GeofenceService {
 
   /// Start monitoring user location and checking geofences
   Future<void> startMonitoring() async {
+    debugPrint('GeofenceService: startMonitoring called');
     try {
       // Check location permission
       final hasPermission = await _checkLocationPermission();
@@ -42,13 +43,16 @@ class GeofenceService {
       // Listen to places stream
       _placesStream.listen((places) {
         _currentPlaces = places;
-        debugPrint('📍 Updated places list: ${places.length} places');
+        debugPrint('📍 Updated places list: \\${places.length} places');
+        for (final place in places) {
+          debugPrint('   - Place: \\${place.name}, Lat: \\${place.latitude}, Lng: \\${place.longitude}');
+        }
       });
 
       // Start listening to location updates
       const locationSettings = LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 50, // Update every 50 meters
+        distanceFilter: 10, // Update every 10 meters for more frequent updates
       );
 
       _locationSubscription = Geolocator.getPositionStream(
@@ -56,13 +60,13 @@ class GeofenceService {
       ).listen(
         _onLocationUpdate,
         onError: (error) {
-          debugPrint('❌ Location stream error: $error');
+          debugPrint('❌ Location stream error: \\${error}');
         },
       );
 
       debugPrint('✅ Geofence monitoring started');
     } catch (e) {
-      debugPrint('❌ Failed to start geofence monitoring: $e');
+      debugPrint('❌ Failed to start geofence monitoring: \\${e}');
     }
   }
 
@@ -106,7 +110,7 @@ class GeofenceService {
   /// Handle location updates
   void _onLocationUpdate(Position position) {
     try {
-      debugPrint('📍 Location update: ${position.latitude}, ${position.longitude}');
+      debugPrint('📍 Location update: \\${position.latitude}, \\${position.longitude}');
 
       for (final place in _currentPlaces) {
         final distance = _calculateDistance(
@@ -115,14 +119,14 @@ class GeofenceService {
           place.latitude,
           place.longitude,
         );
-
+        debugPrint('   - Distance to \\${place.name}: \\${distance.toStringAsFixed(2)} meters');
         // Check if within geofence radius
         if (distance <= radiusMeters) {
           _handleGeofenceEntered(place, distance);
         }
       }
     } catch (e) {
-      debugPrint('❌ Error processing location update: $e');
+      debugPrint('❌ Error processing location update: \\${e}');
     }
   }
 

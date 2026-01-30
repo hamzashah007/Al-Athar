@@ -23,5 +23,10 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
+
+    // User Notifications - users can only access their own notifications
+    match /user_notifications/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
   }
 }

@@ -2,7 +2,7 @@ class PlaceModel {
   final String id;
   final String name;
   final String city;
-  final String imageUrl;
+  final String image;
   final String shortHistory;
   final String fullHistory;
   final double latitude;
@@ -12,7 +12,7 @@ class PlaceModel {
     required this.id,
     required this.name,
     required this.city,
-    required this.imageUrl,
+    required this.image,
     required this.shortHistory,
     required this.fullHistory,
     required this.latitude,
@@ -24,7 +24,7 @@ class PlaceModel {
       id: id,
       name: map['name'] ?? '',
       city: map['city'] ?? '',
-      imageUrl: map['imageUrl'] ?? '',
+      image: map['image'] ?? '',
       shortHistory: map['shortHistory'] ?? '',
       fullHistory: map['fullHistory'] ?? '',
       latitude: map['latitude']?.toDouble() ?? 0.0,
@@ -36,7 +36,7 @@ class PlaceModel {
     return {
       'name': name,
       'city': city,
-      'imageUrl': imageUrl,
+      'image': image,
       'shortHistory': shortHistory,
       'fullHistory': fullHistory,
       'latitude': latitude,

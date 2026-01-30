@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/place_model.dart';
+import '../models/notification_model.dart';
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications;
@@ -17,9 +21,9 @@ class NotificationService {
     try {
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
       const iosSettings = DarwinInitializationSettings(
-        requestAlertPermission: false,
-        requestBadgePermission: false,
-        requestSoundPermission: false,
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
       );
 
       const initSettings = InitializationSettings(
@@ -33,8 +37,10 @@ class NotificationService {
       );
 
       debugPrint('✅ Notification service initialized');
-    } catch (e) {
-      debugPrint('❌ Failed to initialize notifications: $e');
+    } on PlatformException catch (e) {
+      debugPrint('❌ Platform error initializing notifications: code=${e.code}, message=${e.message}, stackTrace=${e.stacktrace}');
+    } catch (e, stack) {
+      debugPrint('❌ Failed to initialize notifications: $e\nStackTrace: $stack');
     }
   }
 
@@ -74,8 +80,11 @@ class NotificationService {
       }
 
       return true;
-    } catch (e) {
-      debugPrint('❌ Failed to request notification permission: $e');
+    } on PlatformException catch (e) {
+      debugPrint('❌ Platform error requesting notification permission: code=${e.code}, message=${e.message}, stackTrace=${e.stacktrace}');
+      return false;
+    } catch (e, stack) {
+      debugPrint('❌ Failed to request notification permission: $e\nStackTrace: $stack');
       return false;
     }
   }
@@ -105,15 +114,40 @@ class NotificationService {
 
       await _notifications.show(
         place.id.hashCode, // Use place ID hash as notification ID
-        '📍 ${place.name}',
-        place.shortHistory,
+        place.name, // Title without emoji
+        'You are near ${place.name}. Tap to learn more.',
         details,
         payload: place.id, // Pass place ID for navigation
       );
-
       debugPrint('✅ Notification sent for: ${place.name}');
-    } catch (e) {
-      debugPrint('❌ Failed to show notification: $e');
+      // Save notification to Firestore for in-app history
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final notification = AppNotification(
+          id: '',
+          placeId: place.id,
+          placeName: place.name,
+          placeImage: place.image,
+          message: 'You are near ${place.name}. Tap to learn more.',
+          timestamp: DateTime.now(),
+        );
+        try {
+          final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+          final userSnapshot = await userDoc.get();
+          if (!userSnapshot.exists) {
+            await userDoc.set({'createdAt': DateTime.now()});
+          }
+          await userDoc.collection('user_notifications').add(notification.toMap());
+        } on FirebaseException catch (e) {
+          debugPrint('❌ Firestore error: code=${e.code}, message=${e.message}, stackTrace=${e.stackTrace}');
+        } catch (e, stack) {
+          debugPrint('❌ Unexpected error saving notification: $e\nStackTrace: $stack');
+        }
+      }
+    } on PlatformException catch (e) {
+      debugPrint('❌ Platform error: code=${e.code}, message=${e.message}, stackTrace=${e.stacktrace}');
+    } catch (e, stack) {
+      debugPrint('❌ Failed to show notification: $e\nStackTrace: $stack');
     }
   }
 
@@ -122,8 +156,10 @@ class NotificationService {
     try {
       await _notifications.cancelAll();
       debugPrint('✅ All notifications cancelled');
-    } catch (e) {
-      debugPrint('❌ Failed to cancel notifications: $e');
+    } on PlatformException catch (e) {
+      debugPrint('❌ Platform error cancelling notifications: code=${e.code}, message=${e.message}, stackTrace=${e.stacktrace}');
+    } catch (e, stack) {
+      debugPrint('❌ Failed to cancel notifications: $e\nStackTrace: $stack');
     }
   }
 }

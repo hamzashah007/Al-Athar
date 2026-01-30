@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/suggestion_model.dart';
 
-// Provider for city suggestions with coordinates
+// Provider for city suggestions with coordinates and images
 final suggestionsProvider = Provider<List<SuggestionModel>>((ref) {
   return [
     SuggestionModel(
       id: '1',
       name: 'Makkah',
+      imageUrl: 'assets/suggestion_styles/Mecca.png',
       order: 1,
       latitude: 21.4225,
       longitude: 39.8262,
@@ -15,6 +16,7 @@ final suggestionsProvider = Provider<List<SuggestionModel>>((ref) {
     SuggestionModel(
       id: '2',
       name: 'Madinah',
+      imageUrl: 'assets/suggestion_styles/madinah.png',
       order: 2,
       latitude: 24.4672,
       longitude: 39.6142,
@@ -23,26 +25,11 @@ final suggestionsProvider = Provider<List<SuggestionModel>>((ref) {
     SuggestionModel(
       id: '3',
       name: 'Taif',
+      imageUrl: 'assets/suggestion_styles/taif.png',
       order: 3,
       latitude: 21.2622,
       longitude: 40.4117,
       zoom: 12.0,
-    ),
-    SuggestionModel(
-      id: '4',
-      name: 'Riyadh',
-      order: 4,
-      latitude: 24.7136,
-      longitude: 46.6753,
-      zoom: 11.0,
-    ),
-    SuggestionModel(
-      id: '5',
-      name: 'Jeddah',
-      order: 5,
-      latitude: 21.5433,
-      longitude: 39.1728,
-      zoom: 11.0,
     ),
   ];
 });

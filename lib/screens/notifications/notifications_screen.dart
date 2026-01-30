@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/notifications_provider.dart';
+import '../../models/notification_model.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/empty_state_widget.dart';
+import '../../providers/auth_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-final notificationsProvider = FutureProvider<List<Map<String, String>>>((
-  ref,
-) async {
-  await Future.delayed(const Duration(seconds: 1));
-  // TODO: Replace with real notifications
-  return [];
-});
+String formatTime(DateTime? dt) {
+  if (dt == null) return '';
+  final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+  final ampm = dt.hour < 12 ? 'AM' : 'PM';
+  return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+         '${hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $ampm';
+}
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
@@ -20,16 +24,10 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final notificationsEnabled = ref.watch(
-      settingsProvider.select((s) => s.notificationsEnabled),
-    );
     final notificationsAsync = ref.watch(notificationsProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Notifications',
-          style: TextStyle(color: isDark ? Colors.white : Colors.black),
-        ),
+        title: const Text('Notifications'),
         backgroundColor: Theme.of(context).colorScheme.background,
         foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
@@ -48,76 +46,53 @@ class NotificationsScreen extends ConsumerWidget {
           },
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                const Icon(Icons.notifications_active),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text('Notifications', style: TextStyle(fontSize: 16)),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    // TODO: Implement notification delete/clear logic
-                  },
-                ),
-                Switch(
-                  value: notificationsEnabled,
-                  onChanged: (val) =>
-                      ref.read(settingsProvider.notifier).toggleNotifications(),
-                ),
-              ],
-            ),
-          ),
-          const Divider(),
-          Expanded(
-            child: notificationsAsync.when(
-              loading: () => const CustomLoadingWidget(
-                message: 'Loading notifications...',
-              ),
-              error: (e, _) => CustomErrorWidget(
-                message: 'Couldn\'t load notifications. Please check your connection.',
-                onRetry: () => ref.refresh(notificationsProvider),
-              ),
-              data: (notifications) => notifications.isEmpty
-                  ? EmptyStateWidget(
-                      icon: Icons.notifications_none,
-                      title: 'No Notifications Yet',
-                      message: 'You\'ll receive notifications when you\'re near historical places.',
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: notifications.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final n = notifications[index];
-                        return ListTile(
-                          leading: Icon(
-                            Icons.notifications,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          title: Text(
-                            n['title'] ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(n['body'] ?? ''),
-                          trailing: Text(
-                            n['time'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ),
-        ],
+      body: notificationsAsync.when(
+        data: (notifications) {
+          if (notifications.isEmpty) {
+            return const EmptyStateWidget(
+              icon: Icons.notifications_off,
+              title: 'No notifications yet',
+              message: 'You will see notifications here when you are near a historical place.',
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: notifications.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final n = notifications[index];
+              return ListTile(
+                leading: n.read
+                    ? Icon(Icons.notifications_none, color: Colors.grey)
+                    : Icon(Icons.notifications_active, color: Colors.blue),
+                title: Text(n.placeName),
+                subtitle: Text(n.message ?? ''),
+                trailing: Text(formatTime(n.timestamp)),
+                tileColor: n.read ? null : Colors.blue.withOpacity(0.08),
+                onTap: () async {
+                  final user = ref.read(authStateProvider).asData?.value;
+                  if (user != null && !n.read) {
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .collection('user_notifications')
+                        .doc(n.id)
+                        .update({'read': true});
+                  }
+                  context.push('/place-details/${n.placeId}');
+                },
+              );
+            },
+          );
+        },
+        loading: () => const CustomLoadingWidget(),
+        error: (e, _) {
+          final msg = e.toString();
+          if (msg.contains('permission-denied')) {
+            return Center(child: Text('No notifications yet.'));
+          }
+          return CustomErrorWidget(message: e.toString());
+        },
       ),
     );
   }

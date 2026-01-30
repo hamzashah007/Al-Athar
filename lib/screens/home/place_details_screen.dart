@@ -84,12 +84,12 @@ class PlaceDetailsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Place image placeholder (if imageUrl is available)
-                if (place.imageUrl.isNotEmpty)
+                // Place image placeholder (if image is available)
+                if (place.image.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      place.imageUrl,
+                    child: Image.asset(
+                      'assets/places/${place.image}',
                       height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,

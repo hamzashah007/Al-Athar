@@ -1,5 +1,23 @@
 [
   {
+    "name": "المسجد الحرام - Masjid al-Haram",
+    "city": "Makkah",
+    "image": "masjid_al_haram.png",
+    "shortHistory": "The holiest mosque in Islam, surrounds the Kaaba.",
+    "fullHistory": "المسجد الحرام هو أعظم مسجد في الإسلام ويقع في قلب مكة المكرمة.\n\nMasjid al-Haram is the holiest mosque in Islam, surrounding the Kaaba, the qibla for Muslims worldwide. Millions visit annually for Hajj and Umrah. The mosque has immense historical and spiritual significance, being the first house of worship built for mankind.\n\nLocation: Center of Makkah.",
+    "latitude": 21.4237,
+    "longitude": 39.8254
+  },
+  {
+    "name": "المسجد النبوي - Masjid an-Nabawi",
+    "city": "Madinah",
+    "image": "masjid_an_nabawi.png",
+    "shortHistory": "The Prophet’s Mosque, second holiest in Islam.",
+    "fullHistory": "المسجد النبوي هو ثاني أقدس مسجد في الإسلام بعد المسجد الحرام.\n\nMasjid an-Nabawi was built by Prophet Muhammad ﷺ in Madinah. It houses the Prophet’s tomb and is a major pilgrimage site. The mosque is renowned for its tranquility and spiritual atmosphere.\n\nLocation: Center of Madinah.",
+    "latitude": 24.4672,
+    "longitude": 39.6111
+  },
+  {
     "name": "غار حراء - Cave of Hira",
     "city": "Makkah",
     "imageUrl": "https://images.unsplash.com/photo-1591604466107-ec97de577aff",
